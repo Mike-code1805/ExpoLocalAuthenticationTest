@@ -1,11 +1,33 @@
-import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
+import { AuthScreen, PassSreen } from './src/screens';
+import { useEffect, useState } from 'react';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 export default function App() {
+  const [isBiometricSupport, setIsBiometricSupport] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      setIsBiometricSupport(compatible);
+    })();
+  }, []);
+
+  function onAuthenticate() {
+    const auth = LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate',
+      fallbackLabel: 'Enter password',
+    });
+    auth.then((result) => {
+      setIsAuthenticated(result.success);
+      console.log({ result });
+    });
+  }
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      {isAuthenticated ? <PassSreen onLogout={() => setIsAuthenticated(false)} /> : <AuthScreen onAuthenticate={onAuthenticate} />}
     </View>
   );
 }
